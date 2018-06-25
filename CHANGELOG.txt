@@ -1,0 +1,354 @@
+Changelog DOpE
+==============
+14.08.2017: Removed comparisons with fixed tolerance for zero difference tests, now using relative scaling.
+09.08.2017: Implemented first functionality to simulate PDEs on networks. Together with an 
+	    example in Examples/PDE/StatPDE/Example14.
+07.08.2017: Updated the manual.
+01.08.2017: Added developer branch for networks of PDEs
+26.07.2017: Added publication to licence file.
+24.07.2017: Fixed: Unified check for deal.II version.
+20.07.2017: Fixed: In one dimensional PDEs, the error estimation failed, because the 
+	    1d face-iterator of deal.II does not support the same features as in dimension 2 and 3.
+	    Thus the indexing of the faces by face_iterators failed in 1d. This is now fixed.
+18.07.2017: Fixed: If control dimension is 0 then the error estimator failed
+	    since the higher order interpolation could not be defined.
+	    This is now fixed and the interpolation error is set to zero (as
+	    there is no interpolation error in 0d.
+14.07.2017: Fixed: When solving the PDE fails in (stationary) optimization problems a linesearch for the optimization
+	    is now done.
+21.06.2017: Added possibility to evaluate the final-time value of the solution in the functional together with the initial value.
+16.06.2017: Fixed: missing cross derivative in initial-values for adjoint_hessian problem.
+16.06.2017: Fixed: When considering initial-value control the control could only be accessed 
+	    in the initial-time. This has been fixed, so that the control may be used at other times 
+	    as well. This is useful if periodicity is to be enforced and initial values need to be compared 
+	    with final values.
+17.05.2017: Fixed: When special initial-values for the nonlinear iteration are prescribed in 
+	    stationary problems these values can now also be written as files.
+19.04.2017: Removed description.tex files from Example folders
+=== DOPE Meeting on Apr 12-13, 2017 in Darmstadt ==============================
+13.04.2017: - Bernhard started working on a phase-field fracture example
+	    - Repaired PDE/StatPDE/Example 9 (UMFPACK failed due to 
+	      non-unique pressure with INH material)
+	    - Added InstationaryPDEProblemContainer. Now Nonstationary PDEs
+	      can be run without a fake control. PDE/InstatPDE/Example1
+	      has been adjusted to the new possibilities.
+	    - Unnecessary template-parameter in the time-stepping schemes
+	      removed. The previously needed dopedim can now be avoided
+	      using the auto keyword.
+	    - All instationary PDE Problems adjusted to new structure.
+12.04.2017: - replaced compressed_simple sparsity pattern by dynamic
+	      in order to compile with deal.II 8.5.0 version
+	    - Updates of documentation: debug/release how to change them
+	       * remarks to for the correct installation
+	       * svn -> git how to create new examples
+	       * changed more svn stuff to git (how to obtain from git)
+	       * to use candi for 3rd party 
+	    - Added local constraint handling to integrators to allow the use of
+	      parallelization. This breaks the old initialization of
+	      higherorder-dwr containers (OPT/StatPDE/Example1 and PDE/StatPDE/Example5)
+	      the initialization has now to be done in the problemcontainer and no longer
+	      in the reducedproblem.
+====end of DOPE Meeting on Apr 12-13, 2017 ====================================
+31.03.2017: Added assertion for the initial condition to avoid obscure results 
+	    if initial conditions have too few components.
+08.03.2017: Now initial values in PDE-Newton are possible if
+	    Dirichlet-values depend on the control.
+04.03.2017: Moved to the git system.
+17.11.2016: Augmented the cmake-files. Now, the examples can search for the 
+	    dope sources. This means, the example directory can now be stored 
+	    anywhere and the DOpE/DOpEsrc directory can be stored somewhere else.
+11.11.2016: Cleaned Examples: Paramfiles may no longer have undeclared entries.
+11.11.2016: Adapted ParameterReader and autocmake files to deal.II 8.5
+25.07.2016: Reordered the hints in the CMakeLists files for 
+	    deal.ii. Now the order is
+	    cmake-flag -DDEAL_II_DIR, env{DEAL_II_DIR}, ${home}/deal.II
+	    So that setting the flags/or the environment variable 
+	    always wins against the path.
+25.07.2016: Minor changes in the code to be compatible with
+	    the use of clang compiler. 
+24.07.2016: Added the file problemsdata/adjoint_hessianproblem.h
+	    which contains all equation data needed for the
+	    solution of the adjoint problem for the
+	    evaluation of the reduced hessian.
+24.07.2016: Added the file problemsdata/adjointproblem.h
+	    which contains all equation data needed for the
+	    solution of the adjoint problem.
+24.07.2016: Added the file problemsdata/tangentproblem.h
+	    which contains all equation data needed for the
+	    solution of the tangent problem.
+24.07.2016: Cleanup of the OptProblemContainer. Removed the
+	    equation code for the subproblems 'adjoint_for_ee' and
+	    'state'.
+24.07.2016: Added the file problemdata/opt_adjoint_for_eeproblem.h
+	    This file contains the pde information for the
+	    adjoint problem associated with error estimation for
+	    an optimization problem. 
+22.07.2016: Added the file problemdata/pde_adjoint_for_eeproblem.h
+	    This file contains the pde information for the
+	    adjoint problem associated with error estimation for
+	    a pde solution. Now PDEProblemContainer is only
+	    needed to generate the problems used in stationary
+	    PDE calculations.
+26.05.2016: Restructured include commands in files now files
+	    in DOpEsrc are included with <> brackets and explicit
+	    mentioning of the subdirectory
+19.05.2016: Evaluation Functionals given as functions of 
+	    integrals now also possible for auxiliary (non-cost) Functionals
+	    as well as for PDE problems.
+19.05.2016: Restructured code from previous updates to 
+	    simplify the code layout.
+18.05.2016: Updated the instatreducedproblem so that 
+	    optimization problems with cost-functionals given as 
+	    time integrals of functions of space-integrals are possible.
+	    An example is provided in OPT/InstatPDE/Example4
+18.05.2016: Updated the pde and functional interfaces. Now both provide
+	    the current time and the time-step-size via corresponding
+	    GetTime and GetTimeStepSize functions.
+17.05.2016: Updated the statreducedproblem so that 
+	    optimization problems with cost-functionals given by 
+	    functions of integrals -- such as the absolute-value of the
+	    drag -- is possible. A corresponding example is available
+	    in OPT/StatPDE/Example10		 
+11.05.2016: Checking for MPI to avoid errors when using Trilinos
+	    versions compiled with MPI.
+08.04.2016: Update in the Newton solvers. If the step calculation 
+	    fails with a matrix reused from a previous iteration, 
+	    instead of returning an error the Newton solvers now repeat 
+	    the step with a newly assembled matrix. 
+05.04.2016: Providing an interface to the direct solvers of Trilinos
+	    via the TrilinosDirectSolverWithMatrix class. The use 
+	    is demonstrated in PDE/StatPDE/Example10
+04.04.2016: Updated CMakeExamples.txt so that now the static libraries
+	    of SNOPT are linked. Using the shared libraries may 
+	    provide problems, as shared linking to SNOPT's own libblas
+	    gives complications if a system wide libblas is also found. 
+01.04.2016: Removed old code from the makefiles. This breaks compatibility 
+	    with deal versions prior to 8.0 not using cmake.
+01.04.2016: Removed hidden-virtual warnings when compiling with deal.ii
+	    version 8.4.0 
+31.03.2016: Updated CMake files for the examples. Now CMake fails with a
+	    warning if deal.ii is compiled without UMFPACK. 
+	    Moreover the Flags for found thirdparty libraries are now 
+	    DOPELIB_WITH_SNOPT, DOPELIB_WITH_IPOPT and 
+	    DOPELIB_WITH_TRILINOS (for future trilinos incorporation)
+31.03.2016: Fixed Bug with NeedInitialState. Now, the initialization is 
+	    only performed if the state is still close to zero, i.e.,
+	    no previous information has been stored in it. This allows	
+	    to reuse iterates above different levels of refinement as 
+	    starting value.
+30.03.2016: Changed the FaceDataContainer Method GetElementDiameter.
+	    Now, as the name suggests, it returns the diameter of the 
+	    element - and not of the face as before. With this change 
+	    this function also work in 1d where faces are points.
+29.03.2016: Added a function `NeedInitialState' to the 
+	    PDEInterface. It defaults to false but can be set to
+	    true. If true is returned the initial values given to 
+	    the problem are used in the stationary case to 
+	    initialize the state variable in Newton's method. This
+	    can be used if a good starting value is present, or if 
+	    zero is a non-feasible value in the Newton iteration. 
+16.02.2016: Fixed bug in the CMakeExample.txt file. The search for 
+	    additional libraries in ipopt and SNOPT was broken 
+	    and always returned true - this is now fixed.
+16.02.2016: Adjustments for release of dealii V8.4: removing deprecated
+	    function calls.
+===============================================================================
+25.01.2016: Release of DOpElib 3.0
+===============================================================================
+03.12.2015: Updated checkwarn.sh to be useful with the deal 8.3.0
+	    since the old make-scripts no longer work with the 
+	    new cmake system.
+03.12.2015: New Example dG-Discretization in a non-stationary setting
+	    for the isothermal Euler equations
+	    PDE/InstatPDE/Example7
+	    Bugfix in integrator needed to allow dG in space 
+	    discretizations in time-dependent problems.
+02.12.2015: Added support for dG-Discretizations (integration on faces
+	    coupling elements) - and corresponding 
+	    example PDE/StatPDE/Example13
+02.12.2015: Updated Documentation: Removed TeX warnings. Added Thanks to 
+	    Christian Goll for his work in the last six years.
+19.11.2015: Updated Website - moved website to TU Darmstadt
+05.10.2015: Adjusted DOpE to compile with deal.ii 8.3.0
+16.01.2015: Added CMake build system for the examples and updated
+	    the documentation. Set Version to 3.0 pre.
+13.01.2015: Added CMake build system to the library
+02.01.2015: Moved the repository to a new home https://svn.dopelib.net
+02.01.2015: Fixed a bug, that the norm of the residual in the 
+	    ReducedNewtonAlgorithm can get negative due to
+	    cancellation errors, aborting the calculation.
+	    Now, the calculation is only aborted if the negative 
+	    value is too large compared to the requested tolerance;
+	    otherwise the iteration is stopped, since the tolerances 
+	    are met.
+19.12.2014: Fixed Make.global_options in the Examples directory.
+	    Now, the linker options are no longer passed to the 
+	    creation of the object files but only to linking.
+	    This removes spurious Warnings that linking is not done.
+19.12.2014: Added support for nonstationary optimization problems with 
+	    nonlinear time-derivatives, when access to the state 
+	    variable in adjacent timepoints 
+	    is needed. These values are accessible unless the problem-type is 
+	    "state" via the label "state_i-1" and "state_i+1". 
+	    If the problem-type is "state", 
+	    "state_i-1" is "last_time_solution" as it always has been and 
+	    access to state_i+1 is not possible: 
+	        - Don't take future values of the state.  
+19.12.2014: The SetTime function in the *Vector classes has been removed 
+	    - now SetTimeDoFNumber has to be used. 
+	    The functionality of SetTime to interpolate between these values 
+	    should not be part of the Vector, but needs to be calculated 
+	    outside analog to the nodal-vector and the FEValues object.
+===============================================================================
+24.10.2014: Release of DOpElib 2.0
+===============================================================================
+24.10.2014: Add doxygen documentation to website 
+24.10.2014: Change private data member notation to trailing underscore 
+18.10.2014: Changelog now completely in English
+18.10.2014: Executables for the examples are now, by default, 
+	    placed in the respective example directory and no longer in a 
+	    global bin directory
+30.07.2014: Bugfixes for: clang and ubuntu 14.04 
+26.02.2014: Support for the ControlVectorBehavior::nostationary has been added
+	    to allow controls that vary in time. Added Examples/OPT/InstatPDE/Example3.
+26.02.2014: Fixed Bug in nonstationary problems. Up to now, the type timelocal 
+	    and timedistributed where not correctly checked for, and it has always been
+	    considered to be timelocal. This is now fixed.
+28.01.2014: Fixed missing initializations in InstatOptProblemContainer::ReInit.
+	    Added temporal refinement (global) to the SpaceTimeHandlers.
+	    Added Examples/OPT/InstatPDE/Example2 to demonstrate the 
+	    ControlType::stationary.
+27.01.2014: Moved the timestepsize from the timestepping scheme into the problem,
+	    i.e., the scheme has to be written for stepsize one. This allows 
+	    to handle timedependent pdes with time independent functionals automatically
+	    by scaling only the appropriate terms with the stepsize.
+	    Additionally, the FunctionalInterface::NeedTime has now the default
+	    return value true to avoid the implementation of this function in stationary 
+	    problems.	    
+	    Third, the ControlType is now a DOpEtype and no longer a std::string.
+02.01.2014: Added the StateVector behavior only_recent where only the 
+	    spatial vector of the current timestep exist in memory. 
+	    An example is included in PDE/InstatPDE/Example2
+29.12.2013: Added DOpEType::VectorStorageType for the vector behavior in 
+	    the *Vectors replacing the std::string.
+===============================================================================
+17.12.2013: Release of DOpElib 1.0
+===============================================================================
+13.12.2013: 1) description.tex has been rewritten
+	    2) contents.tex especially OPT examples
+	       and PDE/Instat/Example2 have been updated
+	       In particular, explained how optimization problems are 
+	       solved using DOpE (_U _UT _UTT Terme, constraints, etc)
+	       OPT/StatPDE/Example1 content.tex is now very detailed
+            3) PDE/Instat/Example2 extended to FSI with biharmonic mesh
+	       motion.
+13.12.2013 Code Cleaning in the examples:
+		Unified look of the code, deleted unnecessary includes, give
+		localpde instead of PDEInterface as template etc., typedefs instead
+		of defines for the abbreviations
+09.12.2013 Renamed Functions: 
+	   FunctionalInterface::Value*
+		now is FunctionalInterface:ElementValue*/ 
+	   All functions named *cell* are now called 
+	   *element*.
+06.12.2013 Doxygen documentation finished:
+	   Except for self explanatory functions all other
+	   should have a doxygen comment.
+05.12.2013 Unused parameters should now all be placed in a comment.	
+	   All occurrences of the __attribute__((unused)) directive 
+	   have been removed.
+11.09.2013: 1) PDE and OPT StatPDE code cleaned
+	    2) Updated doxygen docu
+	    3) Experimental Example to develop use of MG-Solver
+	    4) Documentation in PDE/StatPDE
+09.05.2013: DESCRIPTION: Template - parameters reworked:
+	    Changes to the user interface:
+	    1) template<typename [FE|DOFHANDLER]> is now template<template<int,int> class [FE|DOFHANDLER]. 
+               So instead of, f.i., dealii::DoFHandler<2> you have to specify dealii::DoFHandler as a 
+               template parameter.
+	    2) ReducedProblemInterface has lost both dim-template-parameters, and derived classes are adapted.
+	    3) Most opt-algorithms have lost one or two dim-template-parameters
+	    4) PDEInterface has lost dopedim as templateparameter.
+08.05.2013: Added interface to IPOPT. 
+11.04.2013: DOpElib is running with deal.II 8.0pre, updated
+	    deprecated headers
+10.04.2013: Added support to estimate the error in the CostFunctional for 
+	    Optimization problems added. See OPT/StatPDE/Example1
+07.02.2013: Changed Interface of RefineSpace of the MOL-SpaceTimeHandlers
+21.12.2012: Removed the now unnecessary deal_II_dim > 1 checks for boundary and face integrals.
+	    Now also in 1d we can use boundary equation ...
+05.10.2012: Output handler now checks for nan and -nan values to assert that only nan is written in any case.
+22.08.2012: OptProblemContainer and PDEProblemContainer now only evaluate Functionals
+	    appearing in *Rhs if the type is required by the functional
+12.07.2012: -Time stepping schemes rescaled. They now correspond to the scaling one 
+	    	  would get using Galerkin-Methods in time.
+	    -Removed Default setting in *Time*Explicit methods of the PDEINTERFACE.
+	     Now, if not desired they do nothing (and need not be implemented).
+	     In any other case user needs to write *Time*Explicit and write *Time* to 
+	     do nothing.
+Jun 2012  : Logo and Website have been created
+09.05.2012: Backward-Time Loop is running
+
+2. DOpE Meeting 3.5.2012-5.5.2012:
+==================================
+- Time stepping schemes rechecked for typos.
+- Renamed optproblem.h to optproblemcontainer.h (OptProblem to OptProblemContainer)
+- Initial Value Computation now done by DOpE, no longer the fixed dealii function project.
+- Changed interface for incorporation of user defined dofconstraints: Dope computes always
+   the hanging node constraints (for state and control), after that, the user specified dofconstraints
+   (for state and control!) are added.
+- DOpEWrapper::FiniteElement removed, use dealii::FESystem instead.
+- Removed unnecessary template parameters SPARSITYMAKER and CONSTRAINTSMAKER.
+- Removed common code from the timestepping schemes and moved it into the base classes ts_base and primal_ts_base. Moved the files containing the timestepping classes into the directory tsschemes
+- Update the Apply...BoundaryValues to include other constraints, 
+  like periodicity... (maybe with nonzero jump...). Also check the 
+  condense(u)/distribute(u) stuff again, it should not be in the apply 
+  boundary value stuff...	
+- pdeinterface.h - scale_ico in CellEquation_U etc. implemented!
+- It is now possible to use point-functionals as cost functionals. OPT/StatPDE/Example2 shows this. 
+
+before 2.5.2012
+-------------------------
+- SVN in Heidelberg 
+- Manual: Additional Chapter on what this Library does and why it is doing so.
+- Multimesh: Support of vector valued FE.
+
+15.02.2011: Splitting of spatial meshes for different variables being defined 
+	    on different meshes
+
+Program (1. DOpE Meeting)
+==========================
+
+Where:        Hamburg
+When:         2.1.2012 - 6.1.2012
+Participants: Christian, Michael, Thomas, Winni
+---------------------------------------------
+
+- Renamed statsolver and instatsolver: Now statreducedproblem and instatreducedproblem.
+- Splitting of time discretization of state and control variables
+- Precision for output of numbers added to outputhandler.
+- integrator and newtonsolver now independent of PDEPOBLEM 
+- reducednewtonalgorithm supports output precision 
+- Example 7 (Laplace-Equation), iterative solvers with preconditioner
+  and local mesh refinement in 3d.
+- Moved pdeinterface.h from include to interfaces 
+- Instat Examples duplicated to assert that all time stepping schemes are tested
+- Removed compiler warnings (unused variable ...)
+- 1d Heat equation to test all timestepping schemes
+- Updated existing examples to the new structures
+- PDE/StatPDE		
+   Comments to the examples (in content.tex) should contain:
+	-- What is solved
+  	-- What new features are used. These should be \indexed
+  		
+- Class to iterate over the timesteps
+- Splitting of interval and point in the timediscretization
+
+- DoFHandler as template (i.e. hp and normal case merged)
+  	 -- CellDataContainer and FaceDataContainer adjusted
+	 -- Integrator adjusted
+	 -- Timestepping schemes adjusted
+	 -- hp is now running
+	 -- Code cleaned (removed commented old code fragments
+					
+- IntegratorDataContainer introduced to remove the long list of arguments.

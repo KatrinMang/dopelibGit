@@ -1,0 +1,10 @@
+a) To compile this library with Apple OSX
+   you need to install a recent g++ (4.7 or newer)
+   using macports.
+
+**************************************************************
+
+b) If you encounter duplicate symbol errors that don't appear on 
+   LINUX systems check that now template instantiations are in 
+   library header (.h) files. 
+   They must all be in some cc file in the library

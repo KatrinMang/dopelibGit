@@ -1,0 +1,4 @@
+/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/build/CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir
+/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/build/CMakeFiles/debug.dir
+/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/build/CMakeFiles/release.dir
+/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/build/CMakeFiles/run.dir
