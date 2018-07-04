@@ -1670,7 +1670,7 @@ CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: /home/ifam/mang/dopelib/D
 CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: /home/ifam/mang/dopelib/DOpEsrc/wrapper/mapping_wrapper.h
 CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../functionals.h
 CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../instat_step_modified_newtonsolver.h
-CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../localpde_fully_implicit.h
+CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../localpde_quasi_monolithic.h
 CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../main.cc
 CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../problem_data.h
 CMakeFiles/DOpE-PDE-InstatPDE-Example8b.dir/main.cc.o: ../stress_splitting.h

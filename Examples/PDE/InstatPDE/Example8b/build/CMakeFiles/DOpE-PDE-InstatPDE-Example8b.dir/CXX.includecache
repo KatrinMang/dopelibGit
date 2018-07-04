@@ -19632,7 +19632,7 @@ iomanip
 include/parameterreader.h
 -
 
-/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/localpde_fully_implicit.h
+/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/localpde_quasi_monolithic.h
 interfaces/pdeinterface.h
 -
 stress_splitting.h
@@ -19689,8 +19689,8 @@ tsschemes/shifted_crank_nicolson_problem.h
 -
 instat_step_modified_newtonsolver.h
 /home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/instat_step_modified_newtonsolver.h
-localpde_fully_implicit.h
-/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/localpde_fully_implicit.h
+localpde_quasi_monolithic.h
+/home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/localpde_quasi_monolithic.h
 functionals.h
 /home/ifam/mang/dopelib/Examples/PDE/InstatPDE/Example8b/functionals.h
 problem_data.h
