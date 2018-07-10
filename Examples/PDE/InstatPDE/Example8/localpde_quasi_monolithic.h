@@ -26,8 +26,6 @@
 
 #include <interfaces/pdeinterface.h>
 
-// Aufspalten des Spannungstensors in sigma+ und sigma-
-// Nicht notwendig bei Sneddon
 #include "stress_splitting.h"
 
 using namespace DOpE;
@@ -79,12 +77,10 @@ public:
 
   }
 
-    // Eigentliche PDE bzw. rechte Seite der Newton-Methode,
-    // da wir in DOpElib immer von nicht-linearen Problemen ausgehen
   void
   ElementEquation(const EDC<DH, VECTOR, dealdim> &edc,
                   dealii::Vector<double> &local_vector, double scale,
-                  double)
+                  double /*scale_ico*/)
   {
     assert(this->problem_type_ == "state");
     const DOpEWrapper::FEValues<dealdim> &state_fe_values =
@@ -94,82 +90,60 @@ public:
 
     double element_diameter = edc.GetElementDiameter();
 
-    uvalues_.resize(n_q_points, Vector<double>(4));
-    ugrads_.resize(n_q_points, vector<Tensor<1, 2> >(4));
-    last_timestep_uvalues_.resize(n_q_points, Vector<double>(4));
+    uvalues_.resize(n_q_points, Vector<double>(3));
+    ugrads_.resize(n_q_points, vector<Tensor<1, 2> >(3));
+    last_timestep_uvalues_.resize(n_q_points, Vector<double>(3));
 
     edc.GetValuesState("last_newton_solution", uvalues_);
     edc.GetGradsState("last_newton_solution", ugrads_);
 
     edc.GetValuesState("last_time_solution", last_timestep_uvalues_);
 
-    const FEValuesExtractors::Vector displacements(0);
-    const FEValuesExtractors::Scalar phasefield(2);
-    const FEValuesExtractors::Scalar pressure(3);
+    const FEValuesExtractors::Vector velocities(0);
+    const FEValuesExtractors::Scalar pressure(2);
 
-    // wofuer brauche ich identity und zero matrix?
     Tensor<2,2> Identity;
     Identity[0][0] = 1.0;
     Identity[1][1] = 1.0;
-    //Identity[2][2] = 1.0;
 
     Tensor<2,2> zero_matrix;
     zero_matrix.clear();
 
-    // loop over all quadrature points
+
+
     for (unsigned int q_point = 0; q_point < n_q_points; q_point++)
       {
-
-	// new for pressure variable
-        	/*double press = uvalues_[q_point](3);*/
-
-
-        // new for the pressure equation
-        	/*double incompressibility = ugrads_[q_point][0][0] + ugrads_[q_point][1][1];*/
-
-
-	// displacements gradient
         Tensor<2, 2> grad_u;
         grad_u.clear();
         grad_u[0][0] = ugrads_[q_point][0][0];
         grad_u[0][1] = ugrads_[q_point][0][1];
         grad_u[1][0] = ugrads_[q_point][1][0];
         grad_u[1][1] = ugrads_[q_point][1][1];
-	
-	// displacements
+
         Tensor<1, 2> u;
         u.clear();
         u[0] = uvalues_[q_point](0);
         u[1] = uvalues_[q_point](1);
 
-	// phase field gradient
         Tensor<1,2> grad_pf;
         grad_pf.clear();
         grad_pf[0] = ugrads_[q_point][2][0];
         grad_pf[1] = ugrads_[q_point][2][1];
 
-	double pf = uvalues_[q_point](2);
-        double old_timestep_pf = last_timestep_uvalues_[q_point](2);
 
-	// pressure gradient
-	Tensor<1,2> grad_press;
-        grad_press.clear();
-        grad_press[0] = ugrads_[q_point][3][0];
-        grad_press[1] = ugrads_[q_point][3][1];
+        double pf = uvalues_[q_point](2);
+        double old_timestep_pf = last_timestep_uvalues_[q_point](2);
 
         double pf_minus_old_timestep_pf_plus = std::max(0.0, pf - old_timestep_pf);
 
-	// Youngs modulus
         const Tensor<2,2> E = 0.5 * (grad_u + transpose(grad_u));
         const double tr_E = trace(E);
-	
-	// stress sigma
+
         Tensor<2,2> stress_term;
         stress_term.clear();
         stress_term = lame_coefficient_lambda_ * tr_E * Identity
                       + 2 * lame_coefficient_mu_ * E;
 
-	// splitting the stress tensor into its positiv and negativ part
         Tensor<2,2> stress_term_plus;
         Tensor<2,2> stress_term_minus;
 
@@ -191,12 +165,10 @@ public:
 
         for (unsigned int i = 0; i < n_dofs_per_element; i++)
           {
-            //const Tensor<1, 2> phi_i_u = state_fe_values[displacements].value(i,q_point);
-            const Tensor<2, 2> phi_i_grads_u = state_fe_values[displacements].gradient(i, q_point);
-            const double phi_i_pf = state_fe_values[phasefield].value(i, q_point);
-	    const Tensor<1, 2> phi_i_grads_pf = state_fe_values[phasefield].gradient(i, q_point);
-            	/*const double phi_i_p = state_fe_values[pressure].value(i, q_point);*/
-	    const Tensor<1, 2> phi_i_grads_p = state_fe_values[pressure].gradient(i, q_point);
+            //const Tensor<1, 2> phi_i_u = state_fe_values[velocities].value(i,q_point);
+            const Tensor<2, 2> phi_i_grads_u = state_fe_values[velocities].gradient(i, q_point);
+            const double phi_i_pf = state_fe_values[pressure].value(i, q_point);
+            const Tensor<1, 2> phi_i_grads_pf = state_fe_values[pressure].gradient(i, q_point);
 
             // Solid (Time-lagged version)
             local_vector(i) += scale
@@ -218,21 +190,6 @@ public:
                                  + G_c_ * alpha_eps_ * element_diameter * grad_pf * phi_i_grads_pf
                                ) * state_fe_values.JxW(q_point);
 
-
-	    // Pressure equation a(*,*,p) vorerst -laplace p
-	    local_vector(i) += scale
-                               * (scalar_product(grad_press, phi_i_grads_p)
-                               ) * state_fe_values.JxW(q_point);
-			       //scale_ico
-                               //* (scalar_product(grad_press,phi_i_grads_p) 
-			       // // rhs 1.0
-                               //) * state_fe_values.JxW(q_point);
-
-//			       scale_ico
- //                              * (scalar_product(press, phi_i_grads_p)
-  //                                + incompressibility * phi_i_p)
-   //                            * state_fe_values.JxW(q_point);
-
           }
       }
 
@@ -242,7 +199,7 @@ public:
   void
   ElementMatrix(const EDC<DH, VECTOR, dealdim> &edc,
                 FullMatrix<double> &local_matrix, double scale,
-                double)
+                double /*scale_ico*/)
   {
     const DOpEWrapper::FEValues<dealdim> &state_fe_values =
       edc.GetFEValuesState();
@@ -251,13 +208,12 @@ public:
 
     double element_diameter = edc.GetElementDiameter();
 
-    const FEValuesExtractors::Vector displacements(0);
-    const FEValuesExtractors::Scalar phasefield(2);
-    const FEValuesExtractors::Scalar pressure(3);
+    const FEValuesExtractors::Vector velocities(0);
+    const FEValuesExtractors::Scalar pressure(2);
 
-    uvalues_.resize(n_q_points, Vector<double>(4));
-    ugrads_.resize(n_q_points, vector<Tensor<1, 2> >(4));
-    last_timestep_uvalues_.resize(n_q_points, Vector<double>(4));
+    uvalues_.resize(n_q_points, Vector<double>(3));
+    ugrads_.resize(n_q_points, vector<Tensor<1, 2> >(3));
+    last_timestep_uvalues_.resize(n_q_points, Vector<double>(3));
 
 
     edc.GetValuesState("last_newton_solution", uvalues_);
@@ -267,11 +223,8 @@ public:
 
     std::vector<Tensor<1, 2> > phi_u(n_dofs_per_element);
     std::vector<Tensor<2, 2> > phi_grads_u(n_dofs_per_element);
-    std::vector<double> div_phi_u(n_dofs_per_element);
     std::vector<double> phi_pf(n_dofs_per_element);
     std::vector<Tensor<1, 2> > phi_grads_pf(n_dofs_per_element);
-    std::vector<double> phi_p(n_dofs_per_element);
-    std::vector<Tensor<1, 2> > phi_grads_p(n_dofs_per_element);
 
     Tensor<2,2> Identity;
     Identity[0][0] = 1.0;
@@ -285,13 +238,10 @@ public:
       {
         for (unsigned int k = 0; k < n_dofs_per_element; k++)
           {
-            phi_u[k] = state_fe_values[displacements].value(k, q_point);
-            phi_grads_u[k] = state_fe_values[displacements].gradient(k, q_point);
-	    div_phi_u[k] = state_fe_values[displacements].divergence(k, q_point);
-            phi_pf[k] = state_fe_values[phasefield].value(k, q_point);
-            phi_grads_pf[k] = state_fe_values[phasefield].gradient(k, q_point);
-	    phi_p[k] = state_fe_values[pressure].value(k, q_point);
-	    phi_grads_p[k] = state_fe_values[pressure].gradient(k, q_point);
+            phi_u[k] = state_fe_values[velocities].value(k, q_point);
+            phi_grads_u[k] = state_fe_values[velocities].gradient(k, q_point);
+            phi_pf[k] = state_fe_values[pressure].value(k, q_point);
+            phi_grads_pf[k] = state_fe_values[pressure].gradient(k, q_point);
 
           }
 
@@ -316,12 +266,7 @@ public:
         double old_timestep_pf = last_timestep_uvalues_[q_point](2);
 
         //double pf_minus_old_timestep_pf_plus = std::max(0.0, pf - old_timestep_pf);
-	// new for pressure variable
-		/*double press = uvalues_[q_point](3);*/
-	Tensor<1,2> grad_p;
-        grad_p.clear();
-        grad_p[0] = ugrads_[q_point][3][0];
-        grad_p[1] = ugrads_[q_point][3][1];
+
 
         const Tensor<2,2> E = 0.5 * (grad_u + transpose(grad_u));
         const double tr_E = trace(E);
@@ -358,13 +303,6 @@ public:
               pf_minus_old_timestep_pf_plus_Lin = 0.0;
             else
               pf_minus_old_timestep_pf_plus_Lin = phi_pf[i];
-
-	    // new pressure: linear pressure?
-	    Tensor<2, 2> pressure_LinP;
-            pressure_LinP.clear();
-            pressure_LinP[0][0] = -phi_p[i];
-            pressure_LinP[1][1] = -phi_p[i];
-
 
 
             const Tensor<2, 2> E_LinU = 0.5
@@ -421,16 +359,8 @@ public:
                                         + G_c_ * alpha_eps_ * element_diameter * phi_grads_pf[i] * phi_grads_pf[j]
                                       ) * state_fe_values.JxW(q_point);
 
-		// Pressure
-		local_matrix(j, i) += scale
-                                      * (scalar_product(phi_grads_p[i], phi_grads_p[j])
-                                      ) * state_fe_values.JxW(q_point);
-				      //scale_ico
-                                      //* (scalar_product(pressure_LinP, phi_grads_u[j])
-                     		      //+ (phi_grads_u[i][0][0] + phi_grads_u[i][1][1])
-                                      //* phi_p[j]) * state_fe_values.JxW(q_point);
 
-				      // phi_p[i] * phi_p[j] ? fehlt p?
+
 
 
               }
@@ -440,35 +370,12 @@ public:
 
   }
 
-
-//NEW for -Laplace p = 1
-void
-  ElementRightHandSide(const EDC<DH, VECTOR, dealdim> &edc,
-                       dealii::Vector<double> &local_vector,
-                       double scale)
+  void
+  ElementRightHandSide(const EDC<DH, VECTOR, dealdim> & /*edc*/,
+                       dealii::Vector<double> & /*local_vector*/,
+                       double /*scale*/)
   {
     assert(this->problem_type_ == "state");
-
-    const DOpEWrapper::FEValues<dealdim> &state_fe_values =
-      edc.GetFEValuesState();
-    unsigned int n_dofs_per_element = edc.GetNDoFsPerElement();
-    unsigned int n_q_points = edc.GetNQPoints();
-
-    const FEValuesExtractors::Scalar pressure(3);
-
-    double fvalues = 1.0;
-    //fvalues[1] = 1.0;
-
-    for (unsigned int q_point = 0; q_point < n_q_points; ++q_point)
-      {
-        for (unsigned int i = 0; i < n_dofs_per_element; i++)
-          {
-	    const double phi_i_p = state_fe_values[pressure].value(i, q_point);
-
-            local_vector(i) += scale * fvalues * phi_i_p
-                               * state_fe_values.JxW(q_point);
-          }
-      }
   }
 
   void
@@ -521,7 +428,6 @@ void
   /**
    * Returns the number of blocks. We have two for the
    * state variable, namely velocity and pressure.
-   * not two! displacement (2), phasefield (1) and pressure(1)
    */
 
   unsigned int
@@ -533,8 +439,7 @@ void
   unsigned int
   GetStateNBlocks() const
   {
-    // Mit Druck auf 3 setzen: u, phi, p
-    return 3;
+    return 2;
   }
 
   std::vector<unsigned int> &
@@ -559,8 +464,6 @@ void
   }
 
 private:
-// NEW
-  vector<Tensor<1, dealdim> > fvalues_;
   vector<Vector<double> > uvalues_;
   vector<vector<Tensor<1, dealdim> > > ugrads_;
 

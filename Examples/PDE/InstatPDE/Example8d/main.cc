@@ -51,11 +51,8 @@
 #include <reducedproblems/instatpdeproblem.h>
 #include <container/instatpdeproblemcontainer.h>
 
-
 // Timestepping scheme
-//#include <tsschemes/crank_nicolson_problem.h>
-//#include <tsschemes/fractional_step_theta_problem.h>
-#include <tsschemes/shifted_crank_nicolson_problem.h>
+#include <tsschemes/crank_nicolson_problem.h>
 
 // A new heuristic Newton solver
 #include "instat_step_modified_newtonsolver.h"
@@ -68,7 +65,7 @@
 // PDE 1
 // A quasi-monolithic formulation based
 // on ideas outlined in Heister/Wheeler/Wick; CMAME, 2015
-#include "localpde_quasi_monolithic.h"
+//#include "localpde_quasi_monolithic.h"
 
 // PDE 2
 // A fully implicit formulation without any time-lagging of
@@ -76,7 +73,7 @@
 // implicit setting, the Newton solver needs to be changed
 // to a modified heuristic version that temporarily allows for
 // an increase of the residual.
-// #include "localpde_fully_implicit.h"
+#include "localpde_fully_implicit.h"
 
 
 // Finally, as in the other DOpE examples, we
@@ -89,8 +86,6 @@ using namespace std;
 using namespace dealii;
 using namespace DOpE;
 
-// Ggf. in cmake (CMAKELists.txt) die Dimension ebenfalls aendern 
-// und neues Makefile erzeugen
 const static int DIM = 2;
 
 #define DOFHANDLER DoFHandler
@@ -115,10 +110,8 @@ LocalPDE<CDC, FDC, DOFHANDLER, VECTOR, DIM>,
 typedef StateProblem<OP_BASE, LocalPDE<CDC, FDC, DOFHANDLER, VECTOR, DIM>,
         SimpleDirichletData<VECTOR, DIM>, SPARSITYPATTERN, VECTOR, DIM> PROB;
 
-#define TSP ShiftedCrankNicolsonProblem //FractionalStepThetaProblem //CrankNicolsonProblem
-
-// Bisher nur stueckweise - noch Arbeit noetig!!!
-#define DTSP ShiftedCrankNicolsonProblem //FractionalStepThetaProblem //CrankNicolsonProblem
+#define TSP CrankNicolsonProblem
+#define DTSP CrankNicolsonProblem
 typedef InstatPDEProblemContainer<TSP, DTSP,
         LocalPDE<CDC, FDC, DOFHANDLER, VECTOR, DIM>,
         SimpleDirichletData<VECTOR, DIM>, SPARSITYPATTERN,
@@ -182,13 +175,8 @@ main(int argc, char **argv)
 
   /*********************************************************************************/
   // Assigning finite elements
-  // (1) = polynomial degree - please test (2) for u and phi
-  // zweite Zahl: Anzahl der Komponenten
-  FE<DIM> state_fe(FE_Q<DIM>(1), 2, // vector-valued (here dim=2): displacements 
-		   FE_Q<DIM>(1), 1, // scalar-valued phase-field
-    		   FE_Q<DIM>(1), 1);  // scalar-valued pressure
+  FE<DIM> state_fe(FE_Q<DIM>(1), 2, FE_Q<DIM>(1), 1);
 
-// not sure if better 4 quadratureformulas?
   QUADRATURE quadrature_formula(3);
   FACEQUADRATURE face_quadrature_formula(3);
   IDC idc(quadrature_formula, face_quadrature_formula);
@@ -218,8 +206,6 @@ main(int argc, char **argv)
   MethodOfLines_StateSpaceTimeHandler<FE, DOFHANDLER, SPARSITYPATTERN, VECTOR, DIM>
   DOFH(triangulation, state_fe, times);
 
-
-  // Finales Problem, was alles handled
   OP P(LPDE, DOFH);
 
 
@@ -234,52 +220,45 @@ main(int argc, char **argv)
   /*********************************************************************************/
   // Prescribing boundary values
   // We have 3 components (2D displacements and scalar-valued phase-field)
-  // 4 components with u(x), u(y), phi(x), p(x): pressure ist new component!
-  std::vector<bool> comp_mask(4);
-  comp_mask[2] = false; // phase-field component (always hom. Neumann data)
+  std::vector<bool> comp_mask(3);
+  comp_mask[2] = false;
 
   // Fixed boundaries
   DOpEWrapper::ZeroFunction<DIM> zf(3);
   SimpleDirichletData<VECTOR, DIM> DD1(zf);
 
-  // Non-homogeneous boundary (on top where we tear)
+  // Non-homogeneous boudary (on top where we tear)
   NonHomoDirichletData dirichlet_data(pr);
   SimpleDirichletData<VECTOR, DIM> DD2(dirichlet_data);
 
 
-  comp_mask[0] = true; 
+  comp_mask[0] = true;
   comp_mask[1] = true;
-  comp_mask[3] = true;
 
   // Left boundary
   comp_mask[0] = false;
   comp_mask[1] = true;
-  comp_mask[3] = true;
   P.SetDirichletBoundaryColors(0, comp_mask, &DD1);
 
   // Right boundary
   comp_mask[0] = false;
   comp_mask[1] = true;
-  comp_mask[3] = true; //new: not sure
   P.SetDirichletBoundaryColors(1, comp_mask, &DD1);
 
   // Bottom boundary
   comp_mask[0] = true;
   comp_mask[1] = true;
-  comp_mask[3] = true;//new: not sure
   P.SetDirichletBoundaryColors(2, comp_mask, &DD1);
 
   // Top boundary (shear force via non-homo. Dirichlet)
   comp_mask[0] = true;
   comp_mask[1] = true;
-  comp_mask[3] = true;//new: not sure
   P.SetDirichletBoundaryColors(3, comp_mask, &DD2);
 
 
   // Lower boundary of the slit
   comp_mask[0] = false;
   comp_mask[1] = true;
-  comp_mask[3] = true;//new: not sure
   P.SetDirichletBoundaryColors(4, comp_mask, &DD1);
 
 

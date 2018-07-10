@@ -1,4 +1,4 @@
-# Listing of Parameters for PDE Instat Example 8b
+# Listing of Parameters for PDE Instat Example 1 (Fluid problem)
 # --------------------------------------------------------------
 
 subsection Local PDE parameters
@@ -66,7 +66,7 @@ subsection output parameters
 
 
   # Directory where the output goes to
-  set results_dir       = Results_1/
+  set results_dir       = Results/
 end
 
 
